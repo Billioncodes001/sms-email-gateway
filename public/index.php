@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
-if (PHP_SAPI === 'cli-server' && parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH) === '/style.css') return false;
+if (PHP_SAPI === 'cli-server') {
+    $asset = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if ($asset === '/style.css' || (is_string($asset) && preg_match('~^/fonts/[a-z]+\.woff2$~', $asset) && is_file(__DIR__ . $asset))) return false;
+}
 require dirname(__DIR__).'/src/support.php'; require dirname(__DIR__).'/src/gateway.php';
 boot('Postroom', 'A thoughtful message. A willing audience.');
 initialize_gateway();
