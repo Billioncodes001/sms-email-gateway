@@ -1,0 +1,13 @@
+{
+  "name": "postroom-local-test-desk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "php tests.php && php tests/outbox.php",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@axe-core/playwright": "4.13.0"
+  }
+}

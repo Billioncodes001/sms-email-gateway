@@ -22,4 +22,4 @@ try {
     rejects(fn()=>create_campaign([...$draft,'channel'=>'SMS','body'=>str_repeat('a',481)]));
     rejects(fn()=>simulate(999)); check((int)run('SELECT COUNT(*) FROM outbox')->fetchColumn()===1,'No accidental deliveries');
     echo "PASS: contacts, validation, consent, segmentation, draft persistence, simulation, retry idempotency and rollback.\n";
-} finally { unlink($path); }
+} finally { foreach ([$path, $path.'-wal', $path.'-shm'] as $file) if (is_file($file)) unlink($file); }

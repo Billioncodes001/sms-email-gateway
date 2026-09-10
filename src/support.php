@@ -6,9 +6,10 @@ function database(): PDO {
     static $db;
     if ($db) return $db;
     $path = getenv('DATABASE') ?: dirname(__DIR__) . '/data/app.sqlite';
+    umask(0077);
     if (!is_dir(dirname($path))) mkdir(dirname($path), 0700, true);
     $db = new PDO('sqlite:' . $path, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
-    $db->exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000');
+    $db->exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL');
     $db->exec('CREATE TABLE IF NOT EXISTS login_attempts (ip TEXT PRIMARY KEY, attempts INTEGER NOT NULL, started INTEGER NOT NULL)');
     return $db;
 }
@@ -16,6 +17,21 @@ function run(string $sql, array $params = []): PDOStatement {
     $statement = database()->prepare($sql); $statement->execute($params); return $statement;
 }
 function csrf_field(): string { return '<input type="hidden" name="csrf" value="' . e($_SESSION['csrf']) . '">'; }
+function operation_field(): string { return '<input type="hidden" name="operation" value="' . bin2hex(random_bytes(16)) . '">'; }
+function draft_value(array $input, string $key): string { return is_string($input[$key] ?? null) ? $input[$key] : ''; }
+function valid_session(array $session, int $now, string $fingerprint): bool {
+    return !empty($session['authenticated']) && (int)($session['expires'] ?? 0) > $now && hash_equals($fingerprint, (string)($session['credential'] ?? ''));
+}
+function request_boundary(): void {
+    $origin = getenv('APP_ORIGIN') ?: 'http://127.0.0.1:5307';
+    if (!preg_match('~^http://(127\.0\.0\.1|localhost):[0-9]{4,5}$~D', $origin)) fail(503, 'APP_ORIGIN must be a loopback HTTP origin with an explicit port.');
+    if (!in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) || ($_SERVER['HTTP_HOST'] ?? '') !== substr($origin, 7)) fail(403, 'This private test workspace only accepts its configured loopback origin.');
+    if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 32768) fail(413, 'This request is too large.');
+    if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) fail(405, 'Use GET or POST.');
+    header("Content-Security-Policy: default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'");
+    header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: same-origin'); header('Cache-Control: no-store');
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) !== '/callbacks/local-test' && ($_SERVER['HTTP_ORIGIN'] ?? '') !== $origin) fail(403, 'Request origin does not match this workspace.');
+}
 function notice(string $message): void { $_SESSION['notice'] = $message; }
 function go(string $path = '/'): never { header('Location: ' . $path, true, 303); exit; }
 function fail(int $status, string $message): never {
@@ -27,24 +43,31 @@ function boot(string $name, string $intro): void {
         error_log($error->getMessage());
         fail(500, 'An unexpected error occurred. Please retry.');
     });
-    header("Content-Security-Policy: default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'");
-    header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: no-referrer'); header('Cache-Control: no-store');
-    if (strlen((string)getenv('APP_PASSWORD')) < 12) fail(503, 'Set APP_PASSWORD to at least 12 characters before starting.');
-    session_name('workspace_' . substr(hash('sha256', __DIR__), 0, 12));
+    if (strlen((string)getenv('APP_PASSWORD')) < 16) fail(503, 'Set APP_PASSWORD to at least 16 characters before starting.');
+    session_name('postroom_' . substr(hash('sha256', __DIR__ . (getenv('DATABASE') ?: 'default') . (getenv('APP_ORIGIN') ?: 'default')), 0, 12));
     session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => getenv('COOKIE_SECURE') === 'true', 'use_strict_mode' => true]);
     $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
+    $fingerprint = hash('sha256', (string)getenv('APP_PASSWORD'));
+    if (!empty($_SESSION['authenticated']) && !valid_session($_SESSION, time(), $fingerprint)) {
+        $_SESSION = ['csrf' => bin2hex(random_bytes(32))]; session_regenerate_id(true);
+    }
     if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 32768) fail(413, 'This request is too large.');
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!is_string($_POST['csrf'] ?? null) || !hash_equals($_SESSION['csrf'], $_POST['csrf'])) fail(403, 'This form expired. Reload and try again.');
         if (($_POST['action'] ?? '') === 'logout') { $_SESSION = []; session_regenerate_id(true); go(); }
         if (($_POST['action'] ?? '') === 'login') {
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown'; $now = time();
-            run('DELETE FROM login_attempts WHERE started < ?', [$now - 60]);
-            $count = run('SELECT attempts FROM login_attempts WHERE ip = ?', [$ip])->fetchColumn();
-            if ($count !== false && $count >= 10) fail(429, 'Too many login attempts. Wait one minute.');
-            run('INSERT INTO login_attempts VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET attempts=attempts+1', [$ip, $now]);
+            database()->exec('BEGIN IMMEDIATE');
+            try {
+                run('DELETE FROM login_attempts WHERE started <= ?', [$now - 60]);
+                run('INSERT INTO login_attempts VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET attempts=MIN(attempts+1,11)', [$ip, $now]);
+                $count = run('SELECT attempts FROM login_attempts WHERE ip = ?', [$ip])->fetchColumn();
+                database()->exec('COMMIT');
+            } catch (Throwable $error) { database()->exec('ROLLBACK'); throw $error; }
+            if ($count > 10) fail(429, 'Too many login attempts. Wait one minute.');
             if (is_string($_POST['password'] ?? null) && hash_equals(getenv('APP_PASSWORD'), $_POST['password'])) {
                 session_regenerate_id(true); $_SESSION['authenticated'] = true;
+                $_SESSION['expires'] = time() + 28800; $_SESSION['credential'] = $fingerprint;
                 $_SESSION['csrf'] = bin2hex(random_bytes(32)); run('DELETE FROM login_attempts WHERE ip = ?', [$ip]); go();
             }
             notice('That password is not correct.'); go();

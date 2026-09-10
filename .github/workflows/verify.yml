@@ -9,4 +9,12 @@ jobs:
       - uses: actions/checkout@v4
       - run: php -v
       - run: php tests.php
+      - run: php tests/outbox.php
       - run: find src public -name '*.php' -exec php -l {} \;
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

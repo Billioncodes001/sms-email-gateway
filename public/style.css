@@ -385,3 +385,30 @@ footer {
 body{background:repeating-linear-gradient(0deg,#f6f0e2,#f6f0e2 3px,#f3eddf 3px,#f3eddf 4px);font-family:DM,sans-serif}.shell{max-width:1280px;padding:0 45px}header{border-bottom:2px solid var(--ink);padding:25px 0}.brand{font:600 38px News,serif;letter-spacing:-1.5px}.brand span{font-family:monospace;color:#ad3e32}.edition{font-size:9px}
 .hero{position:relative;padding:35px 0 22px;display:grid;grid-template-columns:1fr 1fr;gap:0 35px}.hero .eyebrow{grid-column:1/-1;font-size:9px;color:#9c3a30}.hero h1{font:400 58px/.98 News;letter-spacing:-2px;margin:12px 0 20px}.hero>p:not(.eyebrow){font-size:13px;max-width:390px;grid-column:1}.stats{grid-column:2;grid-row:2/4;align-items:center;justify-content:center;border:1px dashed #6c8293;margin:10px 0;padding:22px;transform:rotate(2deg);position:relative;gap:30px}.stats:before{content:"POSTROOM / LOCAL DISPATCH";position:absolute;top:-8px;left:20px;padding:0 8px;background:var(--paper);font:8px monospace;letter-spacing:1px}.stats strong{font:42px News}.stats p{font-size:10px}.notice{background:#faf7ef;border:1px solid #cbbd9b;border-radius:0;border-left:4px solid #b33d31;font-size:12px}.tabs{gap:0;border-bottom:1px solid #213f57;margin-bottom:30px;padding-bottom:0}.tabs a{padding:15px 30px;border-radius:0;font-size:13px}.tabs .active{background:#244158;color:#fff9e8}.workspace{grid-template-columns:360px minmax(0,1fr);gap:45px}.panel{border-radius:0;border:1px solid #b9c2c5;background:#fffaf0;padding:28px}.panel .eyebrow{font-size:9px}.panel h2{font:36px News;letter-spacing:-1px}.review{border-top:8px solid;border-image:repeating-linear-gradient(120deg,#ad3e32 0 15px,#fffaf0 15px 30px,#284d6a 30px 45px,#fffaf0 45px 60px) 8;background:#fffcf5;box-shadow:5px 7px 0 #dcd5c2;padding:32px}.review h2{font-size:40px}.review dl{font-size:12px;border-bottom:1px solid var(--line);padding-bottom:25px}.review .prose{font:23px/1.5 News;min-height:100px}.review .hint{font-size:10px}.record{border-radius:0;background:#fbf8ed;border-width:0 0 1px;padding:22px 0}.record h3{font-size:16px}.record p{font-size:11px}.badge{border-radius:3px;font-size:9px;background:#f0e8d3}.empty{border-radius:0;background:#fbf7eb}.empty h3{font:32px News}.hint{font-size:11px}.tabs+a{color:var(--accent)}input,select,textarea{font-family:DM;background:#fffdf6;border-radius:2px;font-size:16px}button,.button{font-family:DM;border-radius:2px}.panel>button{background:#244158;border-color:#244158}.quiet{color:#243e58;background:transparent}.danger{color:#9f3024}.login{margin:25px auto 80px}
 @media(max-width:850px){.shell{padding:0 22px}.hero{grid-template-columns:1fr}.hero h1{font-size:49px}.stats{grid-column:1;grid-row:auto;justify-content:space-around;margin:25px 0 15px;gap:10px;padding:18px 12px}.stats strong{font-size:33px}.stats p{font-size:9px}.workspace{grid-template-columns:1fr;gap:30px}.tabs a{padding:15px 24px;font-size:12px}.review{padding:25px}.panel{padding:25px}.review h2{font-size:34px}}
+
+/* Consent slips and dispatch ledgers stay within the postal stationery language. */
+fieldset{border:1px solid var(--line);margin:24px 0 0;padding:0 14px 14px;min-width:0}
+legend{font:13px News,serif;padding:0 6px}
+.person-card,.outbox-card{border:1px solid var(--line);background:#fffcf5;padding:0 22px 20px;min-width:0}
+.person-card .record,.outbox-card .record{background:transparent}
+.channel-card{padding:4px 0 12px;border-bottom:1px dashed var(--line)}
+.channel-card h4{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;margin:18px 0 8px}
+.channel-card p,.timeline p{font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+details{margin-top:18px;min-width:0}
+summary{cursor:pointer;font-size:13px;min-height:28px;line-height:1.6}
+details form{padding:0 0 10px;max-width:470px}
+.timeline{padding-left:20px;font-size:12px;line-height:1.8}
+.timeline>li{padding:10px 0;border-bottom:1px solid var(--line)}
+.timeline ul{padding-left:18px;overflow-wrap:anywhere}
+.mono{font-family:ui-monospace,monospace;font-size:10px}
+.outbox-heading{max-width:660px;margin-bottom:26px}
+.outbox-heading h2{font:38px News,serif}
+.outbox-list{gap:22px}
+.outbox-card{border-top:4px solid #244158}
+.outbox-card .actions{margin-top:18px}
+.outbox-card .badge{white-space:normal;line-height:1.5;max-width:220px}
+.state-failed,.state-suppressed{background:#f7e2dc;color:#762b23;border-color:#cc968c}
+.state-simulated{background:#e4eddf;color:#284c32;border-color:#a6baa1}
+h2,h3,legend{overflow-wrap:anywhere}
+.error{border-left-width:7px;color:#762b23}
+@media(max-width:850px){.tabs a{padding:15px 14px}.outbox-heading h2{font-size:32px}.person-card,.outbox-card{padding:0 17px 18px}.review dl{grid-template-columns:100px minmax(0,1fr)}}
