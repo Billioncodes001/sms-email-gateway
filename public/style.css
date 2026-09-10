@@ -1,0 +1,379 @@
+:root {
+  --paper: #f8f3e9;
+  --ink: #493728;
+  --muted: #78634e;
+  --line: #e2d5bf;
+  --accent: #9a491e;
+  --tint: #efdfc3;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 90% 0, var(--tint), transparent 50%),
+    var(--paper);
+  color: var(--ink);
+  font-family: "Trebuchet MS", sans-serif;
+}
+.shell {
+  max-width: 1360px;
+  margin: auto;
+  padding: 0 44px;
+}
+a {
+  color: inherit;
+}
+header,
+footer {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: space-between;
+  padding: 27px 0;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-size: 27px;
+  font-weight: bold;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+.brand span {
+  color: var(--accent);
+}
+.edition {
+  margin-left: auto;
+  font:
+    12px ui-monospace,
+    monospace;
+  color: var(--muted);
+}
+.hero {
+  padding: 48px 0 35px;
+}
+.eyebrow {
+  font:
+    11px/1.6 ui-monospace,
+    monospace;
+  letter-spacing: 2px;
+}
+.hero h1 {
+  font:
+    clamp(46px, 5.5vw, 76px)/1.03 Georgia,
+    serif;
+  letter-spacing: -3px;
+  max-width: 850px;
+  margin: 15px 0 20px;
+}
+.hero > p:not(.eyebrow) {
+  color: var(--muted);
+  max-width: 570px;
+  line-height: 1.65;
+}
+.stats {
+  display: flex;
+  gap: 35px;
+  flex-wrap: wrap;
+  margin: 30px 0 0;
+}
+.stats p {
+  font-size: 13px;
+}
+.stats strong {
+  font-size: 30px;
+  display: block;
+  margin-bottom: 6px;
+  font-weight: normal;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 36px;
+  margin-bottom: 60px;
+}
+.panel {
+  background: #fffdfa;
+  border: 1px solid var(--line);
+  padding: 26px;
+  border-radius: 12px;
+  align-self: start;
+}
+.login {
+  max-width: 440px;
+  margin-bottom: 70px;
+}
+h2 {
+  font-size: 23px;
+  letter-spacing: -0.5px;
+  margin: 12px 0 24px;
+}
+h3 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+label {
+  font-size: 13px;
+  display: block;
+  margin: 17px 0 8px;
+  font-weight: bold;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font:
+    14px "Trebuchet MS",
+    sans-serif;
+}
+textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+button,
+.button {
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  border: 1px solid var(--accent);
+  padding: 12px 17px;
+  border-radius: 6px;
+  font:
+    13px "Trebuchet MS",
+    sans-serif;
+  min-height: 44px;
+  text-decoration: none;
+  display: inline-block;
+}
+.panel > button {
+  width: 100%;
+  margin-top: 24px;
+}
+.quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+.danger {
+  color: #9f3024;
+}
+.hint,
+.secondary {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.notice {
+  background: var(--tint);
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+.check {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  font-weight: normal;
+  line-height: 1.5;
+}
+.check input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin: 0;
+}
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.toolbar input {
+  flex: 1;
+  min-width: 150px;
+}
+.toolbar select {
+  width: 150px;
+}
+.list {
+  display: grid;
+  gap: 12px;
+}
+.record {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-content: space-between;
+  border: 1px solid var(--line);
+  background: #ffffff70;
+  padding: 22px;
+  border-radius: 10px;
+}
+.record > div {
+  min-width: 0;
+}
+.record p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.avatar {
+  height: 43px;
+  width: 43px;
+  border-radius: 50%;
+  background: var(--tint);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-family: Georgia, serif;
+  font-size: 21px;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.badge {
+  border: 1px solid var(--line);
+  background: var(--tint);
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+}
+.empty h3 {
+  font:
+    30px Georgia,
+    serif;
+  color: var(--ink);
+}
+.tabs {
+  display: flex;
+  gap: 5px;
+  padding-bottom: 22px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.tabs a {
+  padding: 11px 18px;
+  text-decoration: none;
+  border-radius: 6px;
+}
+.tabs .active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.prose {
+  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.full {
+  grid-column: 1/-1;
+}
+.review {
+  max-width: 720px;
+}
+.review dl {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 14px;
+  font-size: 14px;
+}
+.review dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+footer {
+  font-size: 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+  color: var(--muted);
+}
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+@media (max-width: 950px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .shell {
+    padding: 0 22px;
+  }
+  .hero h1 {
+    letter-spacing: -2px;
+  }
+  .edition {
+    display: none;
+  }
+  .record {
+    flex-wrap: wrap;
+  }
+  .record .actions {
+    margin-left: auto;
+  }
+  .stats {
+    gap: 25px;
+  }
+  footer {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .toolbar {
+    align-items: stretch;
+  }
+  .toolbar select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 780px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .record > div:first-child {
+    flex: 1 1 100%;
+  }
+  .identity > div {
+    min-width: 0;
+  }
+}

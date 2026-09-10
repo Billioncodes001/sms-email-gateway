@@ -1,0 +1,12 @@
+name: Verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php -v
+      - run: php tests.php
+      - run: find src public -name '*.php' -exec php -l {} \;

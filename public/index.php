@@ -1,0 +1,36 @@
+<?php
+declare(strict_types=1);
+if (PHP_SAPI === 'cli-server' && parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH) === '/style.css') return false;
+require dirname(__DIR__).'/src/support.php'; require dirname(__DIR__).'/src/gateway.php';
+boot('Postroom', 'A thoughtful message. A willing audience.');
+initialize_gateway();
+$tab = is_string($_GET['tab'] ?? null) && in_array($_GET['tab'],['contacts','compose','outbox'],true) ? $_GET['tab'] : 'contacts';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $action = input_text($_POST,'action');
+        if ($action === 'contact') { add_contact($_POST); notice('Contact added. Only opted-in contacts can enter the simulated outbox.'); }
+        elseif ($action === 'optout') { run('UPDATE contacts SET consent=0 WHERE id=?',[(int)($_POST['id'] ?? 0)]); notice('Consent withdrawn. Future simulations will exclude this contact.'); }
+        elseif ($action === 'delete') { run('DELETE FROM contacts WHERE id=?',[(int)($_POST['id'] ?? 0)]); notice('Contact removed. Existing simulation history is retained.'); }
+        elseif ($action === 'draft') { $id=create_campaign($_POST); go('/?tab=compose&preview='.$id); }
+        elseif ($action === 'simulate') { $count=simulate((int)($_POST['id'] ?? 0)); notice($count ? "$count local outbox entries created. No messages were sent." : 'This campaign was already simulated. No duplicates created.'); go('/?tab=outbox'); }
+        else fail(400,'Unknown action.');
+    } catch (InvalidArgumentException $error) { notice($error->getMessage()); }
+    go('/?tab='.$tab);
+}
+$counts=run('SELECT COUNT(*) total,COALESCE(SUM(consent),0) consent FROM contacts')->fetch();
+$simulations=run('SELECT COUNT(*) FROM outbox')->fetchColumn();
+page_start('Postroom','Consent-first messaging / Local demo');
+?>
+<section class="hero"><p class="eyebrow">A BETTER WAY TO KEEP IN TOUCH</p><h1>Good messages.<br>Good company.</h1><p>A consent-first studio for planning email and SMS. Build an audience, compose with care, and preview your delivery.</p><div class="stats"><p><strong><?=e($counts['total'])?></strong>Contacts</p><p><strong><?=e($counts['consent'])?></strong>Opted in</p><p><strong><?=e($simulations)?></strong>Simulated deliveries</p></div></section>
+<p class="notice"><strong>Local simulation only.</strong> This app does not send SMS or email and has no provider credentials. All outbox entries are test records.</p>
+<nav class="tabs" aria-label="Workspace"><?php foreach (['contacts'=>'Audience','compose'=>'Compose','outbox'=>'Outbox'] as $key=>$label): ?><a class="<?=$tab===$key?'active':''?>" href="/?tab=<?=e($key)?>"><?=e($label)?></a><?php endforeach ?></nav>
+<?php if ($tab==='contacts'): $contacts=run('SELECT * FROM contacts ORDER BY id DESC')->fetchAll(); ?>
+<div class="workspace"><form class="panel" method="post"><?=csrf_field()?><input type="hidden" name="action" value="contact"><p class="eyebrow">01 / THE AUDIENCE</p><h2>Start a connection.</h2><?php field('name','Full name'); choice('channel','Channel',['Email','SMS']); field('destination','Email or international phone'); choice('segment','Audience segment',['Community','Customers','Team']); ?><label class="check"><input name="consent" type="checkbox" value="yes">This person explicitly opted in to this channel.</label><button>Add contact &rarr;</button><p class="hint">No purchased lists. No implied consent. You can withdraw consent at any time.</p></form>
+<section><h2>Your people.</h2><div class="list"><?php foreach ($contacts as $row): ?><article class="record"><div><h3><?=e($row['name'])?></h3><p><?=e($row['destination'])?></p><p><?=e($row['channel'])?> / <?=e($row['segment'])?></p></div><span class="badge"><?=$row['consent']?'Opted in':'Not subscribed'?></span><div class="actions"><?php if ($row['consent']): ?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="optout"><input type="hidden" name="id" value="<?=e($row['id'])?>"><button class="quiet">Opt out</button></form><?php endif ?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?=e($row['id'])?>"><button class="quiet danger" aria-label="Remove <?=e($row['name'])?>">Remove</button></form></div></article><?php endforeach ?><?php if (!$contacts): ?><div class="empty"><h3>Every connection starts somewhere.</h3><p>Add a contact and record their consent to begin.</p></div><?php endif ?></div></section></div>
+<?php elseif ($tab==='compose'): $preview=isset($_GET['preview'])?run('SELECT * FROM campaigns WHERE id=?',[(int)$_GET['preview']])->fetch():false; ?>
+<div class="workspace"><form class="panel" method="post"><?=csrf_field()?><input type="hidden" name="action" value="draft"><p class="eyebrow">02 / THE MESSAGE</p><h2>Make it meaningful.</h2><?php field('title','Campaign title'); choice('channel','Channel',['Email','SMS']); choice('segment','Audience segment',['Community','Customers','Team']); ?><label for="body">Your message</label><textarea id="body" name="body" maxlength="4000" required placeholder="A little news worth sharing..."></textarea><p class="hint">Email: 4,000 bytes. SMS preview: 480 bytes. This is not a telecom segment estimator.</p><button>Preview campaign &rarr;</button></form>
+<section><?php if ($preview): $audience=recipients($preview); ?><div class="panel review"><p class="eyebrow">REVIEW BEFORE SIMULATING</p><h2><?=e($preview['title'])?></h2><dl><dt>Channel</dt><dd><?=e($preview['channel'])?></dd><dt>Audience</dt><dd><?=e($preview['segment'])?></dd><dt>Eligible now</dt><dd><?=count($audience)?> opted-in contacts</dd><dt>Status</dt><dd><?=e($preview['status'])?></dd></dl><p class="prose"><?=e($preview['body'])?></p><?php if ($preview['status']==='draft'): ?><form method="post"><?=csrf_field()?><input type="hidden" name="action" value="simulate"><input type="hidden" name="id" value="<?=e($preview['id'])?>"><button>Simulate delivery</button></form><?php endif ?><p class="hint">Consent is checked again at confirmation. No external requests will be made.</p></div><?php else: ?><div class="empty"><h3>A little care goes a long way.</h3><p>Compose a draft to see its audience and message preview here.</p></div><?php endif ?>
+<h2>Saved campaigns.</h2><div class="list"><?php foreach (run('SELECT * FROM campaigns ORDER BY id DESC')->fetchAll() as $row): ?><article class="record"><div><h3><?=e($row['title'])?></h3><p><?=e($row['channel'])?> / <?=e($row['segment'])?> / <?=e($row['status'])?></p></div><a class="button quiet" href="/?tab=compose&preview=<?=e($row['id'])?>">Review</a></article><?php endforeach ?></div></section></div>
+<?php else: $rows=run('SELECT outbox.*,campaigns.title,campaigns.channel FROM outbox JOIN campaigns ON campaigns.id=outbox.campaign_id ORDER BY outbox.id DESC')->fetchAll(); ?>
+<section><h2>Delivery, without the send.</h2><div class="list"><?php foreach ($rows as $row): ?><article class="record"><div><h3><?=e($row['title'])?></h3><p><?=e($row['destination'])?> / <?=e($row['channel'])?></p><p><?=e($row['created'])?> UTC</p></div><span class="badge">Simulated / not sent</span></article><?php endforeach ?><?php if (!$rows): ?><div class="empty"><h3>Nothing has left the desk.</h3><p>Your simulated campaign deliveries will appear here.</p></div><?php endif ?></div></section><br>
+<?php endif; page_end(); ?>
